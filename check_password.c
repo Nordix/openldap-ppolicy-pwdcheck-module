@@ -49,7 +49,8 @@ static validator valid_word (char *);
 static int set_quality (char *);
 static int set_cracklib (char *);
 
-int check_password (char *pPasswd, char **ppErrStr, Entry *pEntry);
+int check_password(char *pPasswd, struct berval *errmsg, Entry *pEntry,
+                   struct berval *arg);
 
 struct config_entry {
   char* key;
@@ -331,9 +332,8 @@ static int realloc_error_message (char ** target, int curlen, int nextlen)
 	return curlen;
 }
 
-	int
-check_password (char *pPasswd, char **ppErrStr, Entry *pEntry)
-{
+int check_password(char *pPasswd, struct berval *errmsg, Entry *pEntry,
+                   struct berval *arg) {
 
 	char *szErrStr = (char *) ber_memalloc(MEM_INIT_SZ);
 	int  mem_len = MEM_INIT_SZ;
@@ -584,13 +584,13 @@ check_password (char *pPasswd, char **ppErrStr, Entry *pEntry)
   print_config_entries();
 #endif
   dealloc_config_entries();
-	*ppErrStr = strdup ("");
+	errmsg->bv_val = strdup("");
 	ber_memfree(szErrStr);
 	return (LDAP_SUCCESS);
 
 fail:
   dealloc_config_entries();
-	*ppErrStr = strdup (szErrStr);
+	errmsg->bv_val = strdup(szErrStr);
 	ber_memfree(szErrStr);
 	return (EXIT_FAILURE);
 

@@ -1,0 +1,2 @@
+CompileFlags:
+  Add: [-I./openldap-src/include, -I./openldap-src/servers/slapd]
