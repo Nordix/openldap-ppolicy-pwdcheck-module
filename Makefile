@@ -26,7 +26,7 @@ OPT=-g -O2 -Wall -fpic 						\
 	-DHAVE_CRACKLIB -DCRACKLIB_DICTPATH="\"$(CRACKLIB)\""	\
 	-DCONFIG_FILE="\"$(CONFIG)\""
 
-LDAP_INC_PATH=.
+LDAP_INC_PATH ?= openldap-src
 
 # Where to find the OpenLDAP headers.
 #
@@ -72,3 +72,9 @@ clean:
 
 distclean: clean
 	$(RM) -rf openldap-*
+
+openldap:
+	cd openldap-src && ./configure --enable-modules --enable-ppolicy && make depend && make
+
+test:
+	(cd openldap-src/tests && SCRIPTDIR=$(CURDIR)/tests DEFSDIR=$(CURDIR)/openldap-src/tests/scripts ./run test.sh)
