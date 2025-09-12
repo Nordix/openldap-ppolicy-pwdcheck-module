@@ -1,0 +1,48 @@
+name: Update OpenLDAP Submodule
+
+on:
+  schedule:
+    - cron: '0 2 * * 0' # Runs weekly on Sunday at 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  update-openldap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Get latest OpenLDAP tag
+        run: |
+          latest_tag=$(git ls-remote --tags https://github.com/openldap/openldap.git | awk -F/ '/OPENLDAP_REL_ENG_[0-9]+_[0-9]+_[0-9]+$/ {print $NF}' | sort -V | tail -n1)
+          echo "latest_tag=$latest_tag" >> $GITHUB_ENV
+
+      - name: Update submodule to latest tag
+        run: |
+          cd openldap-src
+          git fetch --tags
+          git checkout ${{ env.latest_tag }}
+          cd ..
+          git add openldap-src
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update OpenLDAP submodule to ${{ env.latest_tag }}" || echo "No changes to commit"
+
+      - name: Create Pull Request if there are changes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if git diff --cached --quiet; then
+            echo "No submodule update needed."
+            exit 0
+          fi
+          branch="update-openldap-${{ env.latest_tag }}"
+          git checkout -b "$branch"
+          git push origin "$branch"
+          gh pr create --title "Bump OpenLDAP to ${{ env.latest_tag }}" \
+            --body "Bumps OpenLDAP to ${{ env.latest_tag }}." \
+            --base ${{ github.ref_name }} \
+            --head "$branch"

@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (with OpenLDAP submodule)
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: |
+          sudo apt update
+          sudo apt install --no-install-recommends -y build-essential libssl-dev libtool libltdl-dev autoconf automake libcrack2-dev cracklib-runtime
+
+      - name: Build OpenLDAP
+        run: |
+          make openldap
+
+      - name: Build password check module
+        run: |
+          make
+
+      - name: Run integration tests
+        run: |
+          make test
