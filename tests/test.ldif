@@ -1,0 +1,41 @@
+dn: dc=example,dc=com
+objectClass: top
+objectClass: organization
+objectClass: dcObject
+o: Example
+dc: example
+
+dn: ou=policies,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+ou: policies
+
+dn: cn=default,ou=policies,dc=example,dc=com
+objectclass: top
+objectClass: device
+objectClass: pwdPolicy
+objectClass: pwdPolicyChecker
+cn: default
+pwdAttribute: userPassword
+pwdCheckQuality: 2
+pwdExpireWarning: 10
+pwdMaxAge: 30
+pwdAllowUserChange: TRUE
+pwdMustChange: TRUE
+pwdLockout: TRUE
+pwdUseCheckModule: TRUE
+
+dn: ou=people,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+ou: people
+
+dn: uid=user,ou=people,dc=example,dc=com
+objectClass: top
+objectClass: person
+objectClass: inetOrgPerson
+uid: user
+sn: User
+cn: Test User
+givenName: Test
+userPassword: secret
