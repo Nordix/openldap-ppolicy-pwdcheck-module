@@ -26,7 +26,7 @@ OPT=-g -O2 -Wall -fpic 						\
 	-DHAVE_CRACKLIB -DCRACKLIB_DICTPATH="\"$(CRACKLIB)\""	\
 	-DCONFIG_FILE="\"$(CONFIG)\""
 
-LDAP_INC_PATH=.
+LDAP_INC_PATH ?= openldap-src
 
 # Where to find the OpenLDAP headers.
 #
@@ -51,7 +51,7 @@ LIBS=$(LDAP_LIB) $(CRACKLIB_LIB)
 LIBDIR=/usr/lib/openldap/
 
 
-all: 	check_password_test
+all: check_password
 
 check_password.o:
 	$(CC) $(OPT) -c $(INCS) check_password.c
@@ -59,9 +59,6 @@ check_password.o:
 check_password: clean check_password.o
 	$(CC) -shared -o check_password.so check_password.o $(CRACKLIB_LIB)
 	ln -sf check_password.so libcheck_password.so
-
-check_password_test: check_password
-	$(CC) -g -O2 -DCONFIG_FILE="\"$(CONFIG)\"" -fpic $(INCS) -Wall check_password_test.c -o cpass -L. -llber -lcheck_password
 
 install: check_password
 	cp -f check_password.so /usr/lib/openldap/modules/
@@ -72,3 +69,12 @@ clean:
 
 distclean: clean
 	$(RM) -rf openldap-*
+
+openldap:
+	cd openldap-src && ./configure --enable-modules --enable-ppolicy && make depend && make
+
+test:
+	(cd openldap-src/tests && SCRIPTDIR=$(CURDIR)/tests DEFSDIR=$(CURDIR)/openldap-src/tests/scripts ./run test.sh)
+
+compdb:
+	bear -- make check_password
