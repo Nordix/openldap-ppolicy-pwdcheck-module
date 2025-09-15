@@ -78,3 +78,6 @@ test:
 
 compdb:
 	bear -- make check_password
+
+clang-format:
+	clang-format -i *.c *.h
