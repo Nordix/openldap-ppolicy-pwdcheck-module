@@ -7,7 +7,7 @@ This project is a fork of a legacy password checker module, updated for compatib
 It is intended for users who require backwards compatiiblity with original module's functionality on newer OpenLDAP versions.
 For others the PPM password policy module available in the OpenLDAP contrib directory [`contrib/slapd-modules/ppm/`](https://github.com/openldap/openldap/tree/master/contrib/slapd-modules/ppm) may be a better choice.
 
-For details on the origins of this project, see Acknowledgements section.
+For details on the origins of this project, see [Acknowledgements](#acknowledgements).
 
 ## Usage
 
@@ -35,7 +35,7 @@ By default, the module reads its configuration from `/etc/openldap/check_passwor
 You can change this location or provide configuration in the following ways:
 
 - Set the `PWDCHECK_MODULE_CONFIG_FILE` environment variable before starting `slapd` to specify a custom config file path.
-- Set the `CONFIG` variable in the Makefile during compilation to change the default path, see [Compilation](#compilation).
+- Set the `CONFIG` variable in the Makefile during compilation to change the default path, see [Compiling](#compiling).
 - Provide configuration using `pwdCheckModuleArg` in the `pwdPolicyChecker` object class, see [`slapo-ppolicy(5)`](https://www.openldap.org/software/man.cgi?query=slapo-ppolicy&sektion=5&apropos=0&manpath=OpenLDAP+2.6-Release).
 
 #### Parameters
@@ -57,7 +57,7 @@ You can change this location or provide configuration in the following ways:
 
 CrackLib is a library that checks passwords against a dictionary of known weak passwords and patterns to enhance password security.
 The CrackLib support may be disabled at compile time by setting `HAVE_CRACKLIB=0` during compilation.
-For more information, see the official repository at [github](https://github.com/cracklib/cracklib/tree/main/src).
+For more information, see the [official repository](https://github.com/cracklib/cracklib/tree/main/src).
 
 ##### Quality Points Concept (`min_points`)
 
@@ -74,13 +74,13 @@ For instance, with `max_consecutive_per_class` set to 5, a password may include 
 
 Setting value 0 disables this check.
 
-⚠️ **Note:** Due to a bug, consecutive characters are counted incorrectly, resulting in the effective limit being one less than the configured value. This behavior is preserved for compatibility with the original module.
+⚠️ Due to a bug, consecutive characters are counted incorrectly, resulting in the effective limit being one less than the configured value. This behavior is preserved for compatibility with the original module.
 
 ##### Password Contains Username (`contains_username`)
 
 If enabled, this option rejects any password that includes the username.
 For example, for the DN `uid=john,ou=people,dc=example,dc=com`, the username `john` is checked against the password.
-If the password contains `john`, it will be rejected.
+For example, if the password is `john2025!`, it will be rejected because it contains the username `john`.
 
 ##### Example configuration
 
@@ -134,7 +134,7 @@ make install
 By default, the module is installed to `/usr/lib/openldap/modules/`.
 You can change this by setting the `DESTDIR=<path-to-install-directory>` variable in the `make install` command.
 
-##### Logging
+#### Logging
 
 The module outputs log messages to `stderr` during runtime, mainly for development and troubleshooting purposes.
 You can control the verbosity by setting the `LOGGER_LEVEL` variable in the Makefile at compile time.
@@ -155,4 +155,4 @@ For full details, see the git history.
 Original repositories:
 
 - [ltb-project/openldap-ppolicy-check-password](https://github.com/ltb-project/openldap-ppolicy-check-password)
-- [trevor-vaughan/openldap-ppolicy-check-password (refactor_and_tests)](https://github.com/trevor-vaughan/openldap-ppolicy-check-password/tree/refactor_and_tests)
+- [trevor-vaughan/openldap-ppolicy-check-password](https://github.com/trevor-vaughan/openldap-ppolicy-check-password/tree/refactor_and_tests)
