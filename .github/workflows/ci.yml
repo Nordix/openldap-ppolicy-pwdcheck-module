@@ -12,23 +12,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository (with OpenLDAP submodule)
+      - name: Checkout repository
         uses: actions/checkout@v5
-        with:
-          submodules: recursive
 
       - name: Install build dependencies
         run: |
           sudo apt update
           sudo apt install --no-install-recommends -y build-essential libssl-dev libtool libltdl-dev autoconf automake libcrack2-dev cracklib-runtime
 
-      - name: Build OpenLDAP
+      - name: Clone and build OpenLDAP
         run: |
           make openldap
 
-      - name: Build password check module
+      - name: Build module
         run: |
-          make
+          make CRACKLIB=$PWD/tests/cracklib-dictionary/dict LOGGER_LEVEL=LOGGER_LEVEL_TRACE
 
       - name: Run integration tests
         run: |

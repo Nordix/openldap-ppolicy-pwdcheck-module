@@ -20,27 +20,24 @@ jobs:
           latest_tag=$(git ls-remote --tags https://github.com/openldap/openldap.git | awk -F/ '/OPENLDAP_REL_ENG_[0-9]+_[0-9]+_[0-9]+$/ {print $NF}' | sort -V | tail -n1)
           echo "latest_tag=$latest_tag" >> $GITHUB_ENV
 
-      - name: Update submodule to latest release tag
+      - name: Update Makefile with latest tag
         run: |
-          cd openldap-src
-          git fetch --tags
-          git checkout ${{ env.latest_tag }}
-          cd ..
+          sed -i "s/^OPENLDAP_GIT_TAG=.*/OPENLDAP_GIT_TAG=${{ env.latest_tag }}/" Makefile
 
       - name: Create Pull Request if there are changes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if git diff --quiet; then
-            echo "No submodule update needed."
+            echo "No update needed."
             exit 0
           fi
           branch="update-openldap-${{ env.latest_tag }}"
           git checkout -b "$branch"
-          git add openldap-src
+          git add Makefile
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -m "Update OpenLDAP submodule to ${{ env.latest_tag }}" || echo "No changes to commit"
+          git commit -m "Bump OpenLDAP to ${{ env.latest_tag }}"
           git push origin "$branch"
           gh pr create --title "Bump OpenLDAP to ${{ env.latest_tag }}" \
             --body "Bumps OpenLDAP to ${{ env.latest_tag }}." \

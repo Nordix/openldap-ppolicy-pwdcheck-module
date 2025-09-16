@@ -1,4 +1,6 @@
 *.o
 *.so
 .cache
+.gdb_history
+openldap-src
 compile_commands.json

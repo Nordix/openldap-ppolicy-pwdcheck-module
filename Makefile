@@ -1,80 +1,83 @@
-# contrib/slapd-modules/check_password/Makefile
 # Copyright 2007 Michael Steinmann, Calivia. All Rights Reserved.
 # Updated by Pierre-Yves Bonnetain, B&A Consultants, 2008
 # Updated by Trevor Vaughan, Onyx Point Inc., 2011
-#
+# Copyright (c) 2025 OpenInfra Foundation Europe and others.
 
-CC=gcc
+# Path to the check_password.c configuration file.
+CONFIG=/etc/openldap/check_password.conf
 
-# Where to look for the CrackLib dictionaries
-#
+# Path to OpenLDAP source tree (defaults to source downloaded with 'make openldap').
+LDAP_SRC_PATH=openldap-src
+
+# Define to 1 if you want to use CrackLib for password strength checking.
+HAVE_CRACKLIB=1
+
+# Path to CrackLib dictionaries.
 CRACKLIB=/usr/share/cracklib/pw_dict
 
-# Path to the configuration file
+# Path to CrackLib headers, if needed.
+CRACK_INC=
+
+# Install path for the compiled module (used for 'make install').
+DESTDIR=/usr/lib/openldap/modules/
+
+# OpenLDAP source code repository and tag to use (used for 'make openldap').
+OPENLDAP_GIT_URL=https://github.com/openldap/openldap.git
+OPENLDAP_GIT_TAG=OPENLDAP_REL_ENG_2_6_10
+
+# Set LOGGER_LEVEL to pick what level of logging you want
 #
-# Make sure this is a writable location to use the cpass tests.
-CONFIG=/etc/openldap/check_password.conf
-#CONFIG=check_password.conf
-
-# Turn on local debugging.
-#OPT=-g -O2 -Wall -fpic 						\
-# -DHAVE_CRACKLIB -DCRACKLIB_DICTPATH="\"$(CRACKLIB)\""	\
-# -DCONFIG_FILE="\"$(CONFIG)\"" \
-# -DLDEBUG
-
-OPT=-g -O2 -Wall -fpic 						\
-	-DHAVE_CRACKLIB -DCRACKLIB_DICTPATH="\"$(CRACKLIB)\""	\
-	-DCONFIG_FILE="\"$(CONFIG)\""
-
-LDAP_INC_PATH ?= openldap-src
-
-# Where to find the OpenLDAP headers.
+# Possible values are:
+#   LOGGER_LEVEL_TRACE
+#   LOGGER_LEVEL_INFO
+#   LOGGER_LEVEL_WARNING
+#   LOGGER_LEVEL_ERROR
+#   LOGGER_LEVEL_NONE
 #
-LDAP_INC=-I$(LDAP_INC_PATH)/include -I$(LDAP_INC_PATH)/servers/slapd -I$(LDAP_INC_PATH)/build-servers/include
-
-# Where to find the CrackLib headers.
-#
-#CRACK_INC=
-
-INCS=$(LDAP_INC) $(CRACK_INC)
-
-LDAP_LIB=-lldap_r -llber
-
-# Comment out this line if you do NOT want to use the cracklib.
-# You may have to add an -Ldirectory if the libcrak is not in a standard
-# location
-#
-CRACKLIB_LIB=-lcrack
-
-LIBS=$(LDAP_LIB) $(CRACKLIB_LIB)
-
-LIBDIR=/usr/lib/openldap/
+LOGGER_LEVEL=LOGGER_LEVEL_WARNING
 
 
-all: check_password
+CC = gcc
 
-check_password.o:
-	$(CC) $(OPT) -c $(INCS) check_password.c
+TARGET = check_password.so
+SRCS = check_password.c
+OBJS = $(SRCS:.c=.o)
 
-check_password: clean check_password.o
-	$(CC) -shared -o check_password.so check_password.o $(CRACKLIB_LIB)
-	ln -sf check_password.so libcheck_password.so
+CFLAGS = -Wall -Wextra -Werror -g -O2 -fPIC
 
-install: check_password
-	cp -f check_password.so /usr/lib/openldap/modules/
+CPPFLAGS = \
+	-DCONFIG_FILE="\"$(CONFIG)\"" \
+    -DLOGGER_LEVEL="$(LOGGER_LEVEL)"
+
+CPPFLAGS += -I$(LDAP_SRC_PATH)/include -I$(LDAP_SRC_PATH)/servers/slapd -I$(LDAP_SRC_PATH)/build-servers/include
+
+LDFLAGS=-shared -Wl,--no-undefined -L$(LDAP_SRC_PATH)/libraries/libldap/.libs -L$(LDAP_SRC_PATH)/libraries/liblber/.libs
+
+LDLIBS=-lldap -llber
+
+ifeq ($(HAVE_CRACKLIB),1)
+CPPFLAGS += -DHAVE_CRACKLIB -DCRACKLIB_DICTPATH="\"$(CRACKLIB)\""
+LDLIBS += -lcrack
+ifneq ($(CRACK_INC),)
+CPPFLAGS += -I$(CRACK_INC)
+endif
+endif
+
+$(TARGET): $(OBJS)
+	$(CC) $(CPPFLAGS) -o $(TARGET) $(OBJS) $(LDFLAGS) $(LDLIBS)
+
+install: $(TARGET)
+	cp -f $(TARGET) $(DESTDIR)
 
 clean:
-	$(RM) check_password.o check_password.so check_password.lo libcheck_password.so cpass check_password.conf
-	$(RM) -r .libs
-
-distclean: clean
-	$(RM) -rf openldap-*
+	$(RM) $(OBJS) $(TARGET)
 
 openldap:
-	cd openldap-src && ./configure --enable-modules --enable-ppolicy && make depend && make
+	[ -d openldap-src ] || git clone $(OPENLDAP_GIT_URL) openldap-src
+	(cd openldap-src && git fetch --tags && git checkout $(OPENLDAP_GIT_TAG) && ./configure --enable-modules --enable-ppolicy && make depend && make)
 
 test:
-	(cd openldap-src/tests && SCRIPTDIR=$(CURDIR)/tests DEFSDIR=$(CURDIR)/openldap-src/tests/scripts ./run test.sh)
+	tests/run.sh
 
 compdb:
 	bear -- make check_password

@@ -5,32 +5,40 @@
 To compile the project, run:
 
 ```
-make
+make CRACKLIB=$PWD/tests/cracklib-dictionary/dict LOGGER_LEVEL=LOGGER_LEVEL_TRACE
 ```
+
+This will produce the `check_password.so` shared library with cracklib support using test dictionary and maximum logging enabled.
 
 ## Testing
 
+Test suite uses OpenLDAP's test framework.
 
-To run the tests, first ensure the OpenLDAP git submodule is initialized and compiled:
+First ensure that [OpenLDAP](https://github.com/openldap/openldap) is cloned under the `openldap-src` directory and compiled by running:
 
 ```
-git submodule update --init
 make opendldap
 ```
 
-To run the tests:
+Then run the tests with:
 
 ```
 make test
 ```
 
-Tests are run against a temporary OpenLDAP server instance started specifically for testing.
-Password changes during tests are performed using the `ldappasswd` command-line tool.
-Both depend on the compiled OpenLDAP source code tree.
-After running a test, you can find the test output files in the `openldap-src/tests/testrun/` directory.
+Tests are run against a temporary OpenLDAP server instance started for the duration of the tests.
+Password changes are performed using the `ldappasswd` command-line tool.
+After running a test, you can find the detailed test output files in the `openldap-src/tests/testrun/` directory.
 
-For examples of how to write tests, refer to the [`tests/`](tests/) directory or in the OpenLDAP source code's `openldap-src/tests/scripts` directory.
+For examples on how to write tests, refer to the [`tests/`](tests/) directory or in the OpenLDAP source code's `openldap-src/tests/scripts` directory.
 
+## Troubleshooting
+
+Run tests with [valgrind](https://valgrind.org/) to catch memory issues:
+
+```
+SLAPD_COMMON_WRAPPER=valgrind make test
+```
 
 ## Code formatting
 
