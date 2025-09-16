@@ -1,7 +1,7 @@
 /*
  * check_password.c for OpenLDAP
  *
- * See LICENSE, README and INSTALL files
+ * See LICENSE and README.md files.
  */
 
 #include <ctype.h>
@@ -18,10 +18,17 @@
 
 #include "check_password.h"
 
+#define PASSWORD_TOO_SHORT_SZ "Password for dn=\"%s\" is too short (%d/6)"
+#define PASSWORD_QUALITY_SZ                                                    \
+	"Password for dn=\"%s\" does not pass required number of strength checks " \
+	"for the required character sets (%d of %d)"
+#define BAD_PASSWORD_SZ "Bad password for dn=\"%s\" because %s"
+#define CONSEC_FAIL_SZ                                                         \
+	"Too many consecutive characters in the same character class for "         \
+	"dn=\"%s\""
+
 #define FILENAME_MAXLEN	 512
 #define DN_MAXLEN		 512
-
-#define TOKENS_DELIMITERS " ,;-_£\t"
 
 int check_password(char* pPasswd, struct berval* errmsg, Entry* pEntry,
 				   struct berval* arg);

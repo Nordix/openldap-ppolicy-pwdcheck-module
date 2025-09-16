@@ -1,7 +1,7 @@
 /*
  * check_password.c for OpenLDAP
  *
- * See LICENSE, README and INSTALL files
+ * See LICENSE and README.md files.
  */
 
 #ifndef CHECK_PASSWORD_H
@@ -9,31 +9,6 @@
 
 #include <stdio.h>
 #include <time.h>
-
-#ifndef CRACKLIB_DICTPATH
-#define CRACKLIB_DICTPATH "/usr/share/cracklib/pw_dict"
-#endif
-
-#ifndef CONFIG_FILE
-#define CONFIG_FILE "/etc/openldap/check_password.conf"
-#endif
-
-#define DEFAULT_QUALITY	 3
-#define DEFAULT_CRACKLIB 1
-#define MEMORY_MARGIN	 50
-#define MEM_INIT_SZ		 64
-#define FILENAME_MAXLEN	 512
-
-#define PASSWORD_TOO_SHORT_SZ "Password for dn=\"%s\" is too short (%d/6)"
-#define PASSWORD_QUALITY_SZ                                                    \
-	"Password for dn=\"%s\" does not pass required number of strength checks " \
-	"for the required character sets (%d of %d)"
-#define BAD_PASSWORD_SZ "Bad password for dn=\"%s\" because %s"
-#define CONSEC_FAIL_SZ                                                         \
-	"Too many consecutive characters in the same character class for "         \
-	"dn=\"%s\""
-#define UNKNOWN_ERROR_SZ                                                       \
-	"An unknown error occurred, please see your systems administrator"
 
 #ifndef LOGGER_LEVEL
 #define LOGGER_LEVEL LOGGER_LEVEL_WARNING
