@@ -3,9 +3,9 @@
 This project provides an OpenLDAP password policy checker module that enforces password quality rules.
 The module integrates with OpenLDAP's password policy overlay ([`slapo-ppolicy(5)`](https://www.openldap.org/software/man.cgi?query=slapo-ppolicy&sektion=5&apropos=0&manpath=OpenLDAP+2.6-Release)).
 
-This project is a fork of a legacy password checker module, updated for compatibility with OpenLDAP 2.6 and with couple of minor enhancements.
-It is intended for users who require backwards compatiiblity with original module's functionality on newer OpenLDAP versions.
-For others the PPM password policy module available in the OpenLDAP contrib directory [`contrib/slapd-modules/ppm/`](https://github.com/openldap/openldap/tree/master/contrib/slapd-modules/ppm) may be a better choice.
+This project is a fork of a legacy password checker module, updated for compatibility with OpenLDAP 2.6 and with a couple of minor enhancements.
+It is intended for users who require backwards compatibility with the original module's functionality on newer OpenLDAP versions.
+For others, the PPM password policy module available in the OpenLDAP contrib directory [`contrib/slapd-modules/ppm/`](https://github.com/openldap/openldap/tree/master/contrib/slapd-modules/ppm) may be a better choice.
 
 For details on the origins of this project, see [Acknowledgements](#acknowledgements).
 
@@ -72,20 +72,20 @@ This parameter sets the limit for consecutive characters from the same character
 For instance, with `max_consecutive_per_class` set to 5, a password may include up to 4 consecutive lowercase letters.
 `abcdABCD1234` is valid, but `abcdeABCD1234` exceeds the limit and is rejected.
 
-Setting value 0 disables this check.
+Setting the value to 0 disables this check.
 
-⚠️ Due to a bug, consecutive characters are counted incorrectly, resulting in the effective limit being one less than the configured value. This behavior is preserved for compatibility with the original module.
+⚠️ Due to a bug, consecutive characters are counted incorrectly, so the effective limit is one less than the configured value. This behavior is preserved for compatibility with the original module.
 
 ##### Password Contains Username (`contains_username`)
 
 If enabled, this option rejects any password that includes the username.
-For example, for the DN `uid=john,ou=people,dc=example,dc=com`, the username `john` is checked against the password.
-For example, if the password is `john2025!`, it will be rejected because it contains the username `john`.
+For example, if a user's DN is `uid=john,ou=people,dc=example,dc=com`, the module extracts the username `john` and checks if it appears anywhere in the password.
+If the password is `john2025!`, it will be rejected because it contains the username `john`.
 
 ##### Example configuration
 
 Each line in the config file should be: `parameter value`
-Spaces and tabs are delimiters.
+Spaces and tabs act as delimiters.
 Parameter names are case-sensitive.
 
 ```

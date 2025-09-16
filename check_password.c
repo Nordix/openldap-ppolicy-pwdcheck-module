@@ -104,7 +104,7 @@ static void parse_config_line(char* buffer) {
 	while (isspace(*buffer) && isascii(*buffer))
 		buffer++;
 
-	if (*buffer == '\0' && ispunct(*buffer)) {
+	if (*buffer == '\0' || ispunct(*buffer)) {
 		return;
 	}
 
