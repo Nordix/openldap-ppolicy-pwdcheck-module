@@ -11,13 +11,14 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v5
-        with:
-          submodules: true
-          fetch-depth: 0
 
       - name: Get latest OpenLDAP release tag
         run: |
           latest_tag=$(git ls-remote --tags https://github.com/openldap/openldap.git | awk -F/ '/OPENLDAP_REL_ENG_[0-9]+_[0-9]+_[0-9]+$/ {print $NF}' | sort -V | tail -n1)
+          if [ -z "$latest_tag" ]; then
+            echo "Error: Could not find latest OpenLDAP release tag." >&2
+            exit 1
+          fi
           echo "latest_tag=$latest_tag" >> $GITHUB_ENV
 
       - name: Update Makefile with latest tag
@@ -33,7 +34,12 @@ jobs:
             exit 0
           fi
           branch="update-openldap-${{ env.latest_tag }}"
-          git checkout -b "$branch"
+          if git show-ref --verify --quiet refs/heads/$branch; then
+            echo "Error: Branch $branch already exists. Please delete it before running this workflow." >&2
+            exit 1
+          else
+            git checkout -b "$branch"
+          fi
           git add Makefile
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

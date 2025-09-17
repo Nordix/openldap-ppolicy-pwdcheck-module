@@ -24,10 +24,6 @@ jobs:
         run: |
           make openldap
 
-      - name: Build module
-        run: |
-          make CRACKLIB=$PWD/tests/cracklib-dictionary/dict LOGGER_LEVEL=LOGGER_LEVEL_TRACE
-
-      - name: Run integration tests
+      - name: Build and run integration tests
         run: |
           make test

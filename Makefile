@@ -67,7 +67,7 @@ $(TARGET): $(OBJS)
 	$(CC) $(CPPFLAGS) -o $(TARGET) $(OBJS) $(LDFLAGS) $(LDLIBS)
 
 install: $(TARGET)
-	cp -f $(TARGET) $(DESTDIR)
+	install -m 644 $(TARGET) $(DESTDIR)/$(TARGET)
 
 clean:
 	$(RM) $(OBJS) $(TARGET)
@@ -77,6 +77,7 @@ openldap:
 	(cd openldap-src && git fetch --tags && git checkout $(OPENLDAP_GIT_TAG) && ./configure --enable-modules --enable-ppolicy && make depend && make)
 
 test:
+	$(MAKE) CRACKLIB=$(CURDIR)/tests/cracklib-dictionary/dict LOGGER_LEVEL=LOGGER_LEVEL_TRACE
 	tests/run.sh
 
 compdb:

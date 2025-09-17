@@ -1,46 +1,39 @@
 # Contributing
 
-## Building the project
-
-To compile the project, run:
-
-```
-make CRACKLIB=$PWD/tests/cracklib-dictionary/dict LOGGER_LEVEL=LOGGER_LEVEL_TRACE
-```
-
-This will produce the `check_password.so` shared library with cracklib support using test dictionary and maximum logging enabled.
-
 ## Testing
 
-Test suite uses OpenLDAP's test framework.
+The test suite uses OpenLDAP's test framework to configure and run `slapd` and to collect test logs.
 
-First ensure that [OpenLDAP](https://github.com/openldap/openldap) is cloned under the `openldap-src` directory and compiled by running:
+First, ensure that [OpenLDAP](https://github.com/openldap/openldap) is cloned into the `openldap-src` directory and compiled.
+Run:
 
 ```
-make opendldap
+make openldap
 ```
 
-Then run the tests with:
+This command checks out the latest released version (as defined by the `OPENLDAP_GIT_TAG` variable in the [`Makefile`](Makefile)) and compiles it in the `openldap-src` directory.
+
+Next, compile the project and run the tests with:
 
 ```
 make test
 ```
 
-Tests are run against a temporary OpenLDAP server instance started for the duration of the tests.
-Password changes are performed using the `ldappasswd` command-line tool.
-After running a test, you can find the detailed test output files in the `openldap-src/tests/testrun/` directory.
+The tests run against a temporary OpenLDAP server instance, which is started for the duration of the tests.
+Password changes are performed using the `ldappasswd` command line tool from the OpenLDAP source tree.
+After running the tests, you can find detailed output files in the `openldap-src/tests/testrun/` directory.
 
-For examples on how to write tests, refer to the [`tests/`](tests/) directory or in the OpenLDAP source code's `openldap-src/tests/scripts` directory.
+For examples of how to write tests, refer to the [`tests/`](tests/) directory in this project or the `openldap-src/tests/scripts` directory in the OpenLDAP source code.
 
 ## Troubleshooting
 
-Run tests with [valgrind](https://valgrind.org/) to catch memory issues:
+To catch memory issues, run the tests with [valgrind](https://valgrind.org/):
 
 ```
 SLAPD_COMMON_WRAPPER=valgrind make test
 ```
 
-## Code formatting
+## Code Formatting
 
 To format the code, run:
 
@@ -50,13 +43,12 @@ make clang-format
 
 You need to have `clang-format` installed for this to work.
 The formatting style is defined in the [.clang-format](.clang-format) file.
+Alternatively, you can use the clangd extension in VS Code to format code.
 
-Alternatively you can use the clangd extension in VS Code to format code.
-See the "VS Code tips" section below for instructions on setting up clangd.
-
-## VS Code tips
+## VS Code Tips
 
 For C language support in VS Code, install the [clangd extension](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) and [`bear`](https://github.com/rizsotto/Bear), which generates a compilation database for the clangd language server.
+
 To install `bear` on Ubuntu or Debian, run:
 
 ```
@@ -69,6 +61,4 @@ To generate the `compile_commands.json` file, run:
 make compdb
 ```
 
-After this, you can open the project in VS Code and benefit from full C language support.
-
-The project also includes a [.clang-format](.clang-format) file for code formatting, which is used by the clangd extension.
+After this, you can open the project in VS Code with full C language support.

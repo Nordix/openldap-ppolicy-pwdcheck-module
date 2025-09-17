@@ -1,7 +1,7 @@
 # PPolicy PwdCheck Module for OpenLDAP
 
-This project provides an OpenLDAP password policy checker module that enforces password quality rules.
-The module integrates with OpenLDAP's password policy overlay ([`slapo-ppolicy(5)`](https://www.openldap.org/software/man.cgi?query=slapo-ppolicy&sektion=5&apropos=0&manpath=OpenLDAP+2.6-Release)).
+This project provides an OpenLDAP password policy checker module that enforces password quality rules when users change their passwords.
+The module is used with OpenLDAP's password policy overlay, see [`slapo-ppolicy(5)`](https://www.openldap.org/software/man.cgi?query=slapo-ppolicy&sektion=5&apropos=0&manpath=OpenLDAP+2.6-Release).
 
 This project is a fork of a legacy password checker module, updated for compatibility with OpenLDAP 2.6 and with a couple of minor enhancements.
 It is intended for users who require backwards compatibility with the original module's functionality on newer OpenLDAP versions.
@@ -27,18 +27,20 @@ objectClass: olcPPolicyConfig
 olcPPolicyCheckModule: libcheck_password.so
 ```
 
-Refer to OpenLDAP 2.6 documentation for details on overlay and module configuration.
+Refer to [OpenLDAP documentation](https://www.openldap.org/doc/admin26/overlays.html#Password%20Policies) for details on ppolicy overlay.
 
 ### Configuration
 
-By default, the module reads its configuration from `/etc/openldap/check_password.conf` if the file exists.
-You can change this location or provide configuration in the following ways:
+By default, the module reads its configuration from `/etc/openldap/check_password.conf` (if the file exists).
+You can change the configuration file location by one of the following methods:
 
-- Set the `PWDCHECK_MODULE_CONFIG_FILE` environment variable before starting `slapd` to specify a custom config file path.
-- Set the `CONFIG` variable in the Makefile during compilation to change the default path, see [Compiling](#compiling).
-- Provide configuration using `pwdCheckModuleArg` in the `pwdPolicyChecker` object class, see [`slapo-ppolicy(5)`](https://www.openldap.org/software/man.cgi?query=slapo-ppolicy&sektion=5&apropos=0&manpath=OpenLDAP+2.6-Release).
+- Set the `CONFIG` variable in the [`Makefile`](Makefile) during compilation, see [Compiling](#compiling).
+- Set the `PWDCHECK_MODULE_CONFIG_FILE` environment variable before starting `slapd`.
+- Provide configuration using `pwdCheckModuleArg` attribute in the `pwdPolicyChecker` object class in your ppolicy object, see [`slapo-ppolicy(5)`](https://www.openldap.org/software/man.cgi?query=slapo-ppolicy&sektion=5&apropos=0&manpath=OpenLDAP+2.6-Release).
 
 #### Parameters
+
+The following parameters can be set in the configuration:
 
 | Parameter                   | Type                | Default | Description                                                    |
 | --------------------------- | ------------------- | ------- | -------------------------------------------------------------- |
@@ -52,40 +54,55 @@ You can change this location or provide configuration in the following ways:
 | `contains_username`         | boolean<sup>1</sup> | `false` | Reject passwords containing the username.                      |
 
 <sup>1</sup> For boolean parameters, you can use `1`/`0` or `true`/`false` (case-insensitive).
+For example, `use_cracklib 1` or `use_cracklib true` both enable the option.
 
 ##### CrackLib
 
 CrackLib is a library that checks passwords against a dictionary of known weak passwords and patterns to enhance password security.
-The CrackLib support may be disabled at compile time by setting `HAVE_CRACKLIB=0` during compilation.
-For more information, see the [official repository](https://github.com/cracklib/cracklib/tree/main/src).
+For more information on CrackLib, see the [official repository](https://github.com/cracklib/cracklib/tree/main/src).
 
-##### Quality Points Concept (`min_points`)
+The CrackLib support is compiled in and enabled by default but it may be disabled with `make HAVE_CRACKLIB=0`.
+To disable CrackLib checks at runtime, set `use_cracklib` to `0` or `false`.
 
-There are four character classes: (1) lowercase letters, (2) uppercase letters, (3) digits, and (4) punctuation/special characters.
+##### Quality Points System (`min_points`)
+
 When the password is evaluated, one quality point is awarded for each character class that fully meets the minimum requirement.
+There are four character classes: (1) lowercase letters, (2) uppercase letters, (3) digits, and (4) punctuation/special characters.
 For example, if `min_upper` is set to 2, at least 2 uppercase letters are needed to earn one point for the uppercase class.
 If `min_points` is set to 3, the password must meet the minimum requirements in at least 3 of the 4 character classes to be accepted.
+Setting `min_points` to 0 disables the quality points check, allowing any password that passes the other checks.
+
+For the quality points system, a class with `min_*` set to 0 is equivalent to setting it to 1.
+A single character from that class will earn a quality point.
+
+##### Minimum Character Requirements (`min_upper`, `min_lower`, `min_digit`, `min_punct`)
+
+These parameters define the minimum number of characters required from each class for a password to be considered valid.
+Setting a parameter to 0 disables the check for that class.
+This check is independent of the quality points system: both must be satisfied unless one is disabled.
 
 ##### Maximum Consecutive Characters (`max_consecutive_per_class`)
 
 This parameter sets the limit for consecutive characters from the same character class in a password.
-For instance, with `max_consecutive_per_class` set to 5, a password may include up to 4 consecutive lowercase letters.
-`abcdABCD1234` is valid, but `abcdeABCD1234` exceeds the limit and is rejected.
-
-Setting the value to 0 disables this check.
+For example, if `max_consecutive_per_class` set to 5, a password may include up to 4 consecutive lowercase letters.
+`abcdABCD1234` is valid, but `abcdeABCDE12345` exceeds the limit and is rejected.
 
 ⚠️ Due to a bug, consecutive characters are counted incorrectly, so the effective limit is one less than the configured value. This behavior is preserved for compatibility with the original module.
+
+Setting the value to 0 disables this check.
 
 ##### Password Contains Username (`contains_username`)
 
 If enabled, this option rejects any password that includes the username.
+By default the check is disabled.
 For example, if a user's DN is `uid=john,ou=people,dc=example,dc=com`, the module extracts the username `john` and checks if it appears anywhere in the password.
-If the password is `john2025!`, it will be rejected because it contains the username `john`.
+If the password is `John2025!`, it will be rejected because it contains the username `john`.
+This check is case-insensitive.
 
 ##### Example configuration
 
-Each line in the config file should be: `parameter value`
-Spaces and tabs act as delimiters.
+Each line in the configuration file should follow the format `parameter value`.
+You may use spaces and tabs as delimiters.
 Parameter names are case-sensitive.
 
 ```
@@ -103,7 +120,7 @@ contains_username false
 
 ### Build Requirements
 
-- OpenLDAP source tree.
+- OpenLDAP source tree (must be configured and built)
 - CrackLib development headers and libraries (unless disabling with `HAVE_CRACKLIB=0`).
 - GNU Make, GCC
 
@@ -118,7 +135,6 @@ contains_username false
 | `CRACK_INC`     | (empty)                             | Path to CrackLib headers      |
 | `LOGGER_LEVEL`  | `LOGGER_LEVEL_WARNING`              | Logging verbosity (see below) |
 
-
 For example, to compile without Cracklib, with a custom config file path and OpenLDAP source tree location, run:
 
 ```
@@ -132,20 +148,20 @@ make install
 ```
 
 By default, the module is installed to `/usr/lib/openldap/modules/`.
-You can change this by setting the `DESTDIR=<path-to-install-directory>` variable in the `make install` command.
+To change the installation directory, run `make DESTDIR=<path-to-install-directory> install`.
 
 #### Logging
 
 The module outputs log messages to `stderr` during runtime, mainly for development and troubleshooting purposes.
-You can control the verbosity by setting the `LOGGER_LEVEL` variable in the Makefile at compile time.
 Supported levels include:
 
-- `LOGGER_LEVEL_DEBUG`
+- `LOGGER_LEVEL_DEBUG` (most verbose)
 - `LOGGER_LEVEL_INFO`
 - `LOGGER_LEVEL_WARNING`
-- `LOGGER_LEVEL_ERROR`
+- `LOGGER_LEVEL_ERROR` (least verbose)
+- `LOGGER_LEVEL_NONE` (disables logging)
 
-To turn off logging entirely, use `make LOGGER_LEVEL=LOGGER_LEVEL_NONE`.
+Set the logger level at compile time by running `make LOGGER_LEVEL=LOGGER_LEVEL_NONE`.
 
 ## Acknowledgements
 

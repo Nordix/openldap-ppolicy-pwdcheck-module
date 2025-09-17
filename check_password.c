@@ -27,8 +27,8 @@
 	"Too many consecutive characters in the same character class for "         \
 	"dn=\"%s\""
 
-#define FILENAME_MAXLEN	 512
-#define DN_MAXLEN		 512
+#define FILENAME_MAXLEN 512
+#define DN_MAXLEN		512
 
 int check_password(char* pPasswd, struct berval* errmsg, Entry* pEntry,
 				   struct berval* arg);
@@ -117,6 +117,9 @@ static void parse_config_line(char* buffer) {
 
 	for (int i = 0; config_entries[i].key != NULL; i++) {
 		if (strcmp(key, config_entries[i].key) == 0) {
+			if (config_entries[i].value != NULL) {
+				ber_memfree(config_entries[i].value);
+			}
 			config_entries[i].value = chomp(value);
 			break;
 		}
@@ -174,15 +177,21 @@ static int read_config_file() {
 }
 
 static char* get_username(const Entry* pEntry, char* dn) {
+	/* Copy DN to buffer, e.g. dn = "uid=john,ou=users,dc=example,dc=com" */
 	strncpy(dn, pEntry->e_nname.bv_val, DN_MAXLEN - 1);
 	dn[DN_MAXLEN - 1] = '\0';
 
 	char* saveptr;
-	char* username = strtok_r(dn, ",+", &saveptr);
-	strtok_r(username, "=", &saveptr);
-	username = strtok_r(NULL, "=", &saveptr);
-
-	return username;
+	/* Tokenize by ',' or '+', gets first RDN: username = "uid=john" */
+	char* rdn = strtok_r(dn, ",+", &saveptr);
+	if (!rdn)
+		return NULL;
+	/* Tokenize by '=', gets attribute name: attr = "uid" */
+	const char* attr = strtok_r(rdn, "=", &saveptr);
+	if (!attr)
+		return NULL;
+	/* Tokenize by '=', gets attribute value: returns "john" */
+	return strtok_r(NULL, "=", &saveptr);
 }
 
 static void set_additional_info(struct berval* errmsg, const char* info, ...) {
@@ -191,6 +200,7 @@ static void set_additional_info(struct berval* errmsg, const char* info, ...) {
 	int needed = vsnprintf(NULL, 0, info, args);
 	va_end(args);
 
+	/* The allocated memory will be freed by ppolicy after use */
 	errmsg->bv_val = ber_memalloc(needed + 1);
 	if (!errmsg->bv_val) {
 		errmsg->bv_len = 0;
@@ -373,10 +383,9 @@ int check_password(char* pPasswd, struct berval* errmsg, Entry* pEntry,
 
 			if ((fp = fopen(filename, "r")) == NULL) {
 				nErr = 1;
-				LOGGER_WARNING(
-					"Could not find cracklib dictionary '%s', skipping "
-					"cracklib checks",
-					filename);
+				LOGGER_INFO("Could not find cracklib dictionary '%s', skipping "
+							"cracklib checks",
+							filename);
 				break;
 			} else {
 				fclose(fp);
@@ -393,10 +402,6 @@ int check_password(char* pPasswd, struct berval* errmsg, Entry* pEntry,
 									pEntry->e_name.bv_val, r);
 				goto fail;
 			}
-		} else {
-			LOGGER_WARNING("Could not find cracklib dictionary '%s', skipping "
-						   "cracklib checks",
-						   CRACKLIB_DICTPATH);
 		}
 	}
 
@@ -404,12 +409,12 @@ int check_password(char* pPasswd, struct berval* errmsg, Entry* pEntry,
 
 	if (contains_username) {
 		char buf[DN_MAXLEN] = {0};
-		char* username = get_username(pEntry, buf);
+		const char* username = get_username(pEntry, buf);
 		if (strlen(buf) > 0) {
 
 			LOGGER_DEBUG("Checking username '%s' is not contained in password",
 						 username);
-			if (strstr(pPasswd, username) != NULL) {
+			if (strcasestr(pPasswd, username) != NULL) {
 				set_additional_info(errmsg, BAD_PASSWORD_SZ,
 									pEntry->e_name.bv_val,
 									"it contains the username");
