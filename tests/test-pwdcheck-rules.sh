@@ -25,7 +25,34 @@ attempt_password_change "SimPle"
 expect_error_message "does not pass required number of strength checks for the required character sets (2 of 3)"
 attempt_password_change "SimPle!"
 expect_success
+reset_password
+attempt_password_change "Simple1"
+expect_success
 echo "[PASS] Default configuration"
+
+echo "[TEST] min_* as 1..."
+set_pwd_check_module_arg <<EOF
+min_upper 1
+min_lower 1
+min_digit 1
+min_punct 1
+min_points 3
+max_consecutive_per_class 0
+use_cracklib 0
+EOF
+reset_password
+attempt_password_change "simple"
+expect_error_message "does not pass required number of strength checks for the required character sets (1 of 3)"
+reset_password
+attempt_password_change "SimPle"
+expect_error_message "does not pass required number of strength checks for the required character sets (2 of 3)"
+reset_password
+attempt_password_change "SimPle!"
+expect_error_message "does not pass required number of strength checks for the required character sets (3 of 3)"
+reset_password
+attempt_password_change "Simple1!"
+expect_success
+echo "[PASS] min_* as 1"
 
 echo "[TEST] min_upper..."
 set_pwd_check_module_arg <<EOF
@@ -87,13 +114,13 @@ echo "[PASS] min_punct"
 echo "[TEST] max_consecutive_per_class..."
 set_pwd_check_module_arg <<EOF
 min_points 1
-max_consecutive_per_class 3
+max_consecutive_per_class 5
 use_cracklib 0
 EOF
 reset_password
-attempt_password_change "aaabcdefghij"
+attempt_password_change "abcdeABCDE12345"
 expect_error_message "Too many consecutive characters in the same character class"
-attempt_password_change "aaBBccDD"
+attempt_password_change "abcdABCD1234"
 expect_success
 echo "[PASS] max_consecutive_per_class"
 
@@ -120,6 +147,8 @@ use_cracklib FALSE
 EOF
 reset_password
 attempt_password_change "username"
+expect_error_message "because it contains the username"
+attempt_password_change "Username"
 expect_error_message "because it contains the username"
 echo "[PASS] contains_username"
 
