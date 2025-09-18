@@ -22,11 +22,10 @@ min_points 1
 max_consecutive_per_class 0
 use_cracklib 0
 EOF
-
 attempt_password_change "abcdefghij"
 expect_error_message "does not pass required number of strength checks for the required character sets (1 of 1)"
 attempt_password_change "abcdEfgHij"
-expect_success
+expect_no_message
 echo "[PASS] Checker with configuration file"
 
 

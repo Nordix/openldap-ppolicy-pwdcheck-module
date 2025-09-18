@@ -10,6 +10,8 @@ CONFIG=/etc/openldap/check_password.conf
 LDAP_SRC_PATH=openldap-src
 
 # If using the checker with OpenLDAP versions prior to 2.6, set this to 1.
+# This will compile the module against the older ppolicy API.
+# Note: the tests only work with OpenLDAP 2.6 and later.
 LDAP_VERSION_PRE_2_6=0
 
 # Define to 1 if you want to use CrackLib for password strength checking.
@@ -88,7 +90,7 @@ test:
 	tests/run.sh
 
 compdb:
-	bear -- make check_password
+	bear -- make
 
 clang-format:
 	clang-format -i *.c *.h

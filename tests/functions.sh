@@ -2,6 +2,8 @@
 # Copyright (c) 2025 OpenInfra Foundation Europe and others.
 #
 
+USERDN="uid=user,ou=people,dc=example,dc=com"
+
 # Configure and start slapd server.
 start_slapd() {
     echo "[INFO] Running slapadd to build slapd database..."
@@ -51,7 +53,7 @@ attempt_password_change() {
     local newpw="$1"
     echo "[INFO] Attempting password change to '$newpw'..."
     $LDAPPASSWD -H "$URI1" \
-        -D "uid=user,ou=people,dc=example,dc=com" \
+        -D "$USERDN" \
         -w "secret" \
         -s "$newpw" > "$TESTOUT"
     return $?
@@ -74,8 +76,8 @@ expect_error_message() {
     fi
 }
 
-# Check that TESTOUT is empty (no error message).
-expect_success() {
+# Check that TESTOUT is empty (no error message in log).
+expect_no_message() {
     if [ -s "$TESTOUT" ]; then
         echo "[ERROR] Output was not empty as expected" >&2
         echo "Actual output:" >&2
@@ -85,10 +87,24 @@ expect_success() {
     fi
 }
 
+# Check that previous command exited with expected status.
+expect_status() {
+    local expected_status="$1"
+    local actual_status
+    actual_status=$?
+    if [ "$actual_status" -ne "$expected_status" ]; then
+        echo "[ERROR] Exit status $actual_status, expected $expected_status" >&2
+        echo "Actual output:" >&2
+        cat "$TESTOUT" >&2
+       [ "$KILLSERVERS" != "no" ] && kill -HUP "$KILLPIDS"
+        exit 1
+    fi
+}
+
 # Reset password back to original.
 reset_password() {
     $LDAPMODIFY -v -D "$MANAGERDN" -H "$URI1" -w "$PASSWD" >/dev/null 2>&1 <<EOF
-dn: uid=user,ou=people,dc=example,dc=com
+dn: $USERDN
 changetype: modify
 replace: userPassword
 userPassword: secret
@@ -99,4 +115,21 @@ EOF
     [ "$KILLSERVERS" != "no" ] && kill -HUP "$KILLPIDS"
         exit $rc
     fi
+}
+
+# Attempt password change using LDAPMODIFY, returns exit code.
+attempt_password_change_with_modify() {
+    local newpw="$1"
+    local modify_op=$(cat <<EOF
+dn: $USERDN
+changetype: modify
+replace: userPassword
+userPassword: $newpw
+EOF
+)
+    echo "[INFO] Attempting password change to '$newpw'..."
+    echo "$modify_op"
+    echo "$modify_op" | $LDAPMODIFY -v -D "$USERDN" -H "$URI1" -w "secret" >/dev/null 2>&1 > "$TESTOUT"
+    echo "[INFO] LDAPMODIFY exit code: $?"
+    return $?
 }

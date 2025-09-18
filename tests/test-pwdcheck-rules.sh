@@ -17,17 +17,17 @@ start_slapd
 
 echo "[TEST] Default configuration..."
 attempt_password_change "F#k2r!m.9"
-expect_success
+expect_no_message
 reset_password
 attempt_password_change "simple"
 expect_error_message "Too many consecutive characters in the same character class"
 attempt_password_change "SimPle"
 expect_error_message "does not pass required number of strength checks for the required character sets (2 of 3)"
 attempt_password_change "SimPle!"
-expect_success
+expect_no_message
 reset_password
 attempt_password_change "Simple1"
-expect_success
+expect_no_message
 echo "[PASS] Default configuration"
 
 echo "[TEST] min_* as 1..."
@@ -51,7 +51,7 @@ attempt_password_change "SimPle!"
 expect_error_message "does not pass required number of strength checks for the required character sets (3 of 3)"
 reset_password
 attempt_password_change "Simple1!"
-expect_success
+expect_no_message
 echo "[PASS] min_* as 1"
 
 echo "[TEST] min_upper..."
@@ -65,7 +65,7 @@ reset_password
 attempt_password_change "abcdefghij"
 expect_error_message "does not pass required number of strength checks for the required character sets (1 of 1)"
 attempt_password_change "abcdEfgHij"
-expect_success
+expect_no_message
 echo "[PASS] min_upper"
 
 echo "[TEST] min_lower..."
@@ -79,7 +79,7 @@ reset_password
 attempt_password_change "ABCDEFGHIJ"
 expect_error_message "does not pass required number of strength checks for the required character sets (1 of 1)"
 attempt_password_change "ABCDfGHij"
-expect_success
+expect_no_message
 echo "[PASS] min_lower"
 
 echo "[TEST] min_digit..."
@@ -93,7 +93,7 @@ reset_password
 attempt_password_change "abcdefghij"
 expect_error_message "does not pass required number of strength checks for the required character sets (1 of 1)"
 attempt_password_change "abcd3fgh1j"
-expect_success
+expect_no_message
 echo "[PASS] min_digit"
 
 echo "[TEST] min_punct..."
@@ -107,7 +107,7 @@ reset_password
 attempt_password_change "abcdefghij"
 expect_error_message "does not pass required number of strength checks for the required character sets (1 of 1)"
 attempt_password_change "abcd!fgh/j"
-expect_success
+expect_no_message
 echo "[PASS] min_punct"
 
 # NOTE: max_consecutive_per_class counts wrong in current implementation, so we need to set 3 to allow 2 consecutive chars.
@@ -121,7 +121,7 @@ reset_password
 attempt_password_change "abcdeABCDE12345"
 expect_error_message "Too many consecutive characters in the same character class"
 attempt_password_change "abcdABCD1234"
-expect_success
+expect_no_message
 echo "[PASS] max_consecutive_per_class"
 
 echo "[TEST] use_cracklib..."
@@ -149,6 +149,10 @@ reset_password
 attempt_password_change "username"
 expect_error_message "because it contains the username"
 attempt_password_change "Username"
+expect_error_message "because it contains the username"
+attempt_password_change "Foousername"
+expect_error_message "because it contains the username"
+attempt_password_change "FooBaruser"
 expect_error_message "because it contains the username"
 echo "[PASS] contains_username"
 
