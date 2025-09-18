@@ -77,7 +77,7 @@ openldap:
 	(cd openldap-src && git fetch --tags && git checkout $(OPENLDAP_GIT_TAG) && ./configure --enable-modules --enable-ppolicy && make depend && make)
 
 test:
-	$(MAKE) CRACKLIB=$(CURDIR)/tests/cracklib-dictionary/dict LOGGER_LEVEL=LOGGER_LEVEL_TRACE
+	$(MAKE) CRACKLIB=$(CURDIR)/tests/cracklib-dictionary/dict LOGGER_LEVEL=LOGGER_LEVEL_DEBUG
 	tests/run.sh
 
 compdb:

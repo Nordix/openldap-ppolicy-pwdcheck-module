@@ -33,6 +33,12 @@ To catch memory issues, run the tests with [valgrind](https://valgrind.org/):
 SLAPD_COMMON_WRAPPER=valgrind make test
 ```
 
+To capture and display LDAP traffic with Wireshark, use:
+
+```
+wireshark -i lo -d tcp.port==9011,ldap -k -Y ldap
+```
+
 ## Code Formatting
 
 To format the code, run:
