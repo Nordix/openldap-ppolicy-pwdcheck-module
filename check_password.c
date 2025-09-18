@@ -10,6 +10,7 @@
 #include <slap.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef HAVE_CRACKLIB
@@ -29,9 +30,6 @@
 
 #define FILENAME_MAXLEN 512
 #define DN_MAXLEN		512
-
-int check_password(char* pPasswd, struct berval* errmsg, Entry* pEntry,
-				   struct berval* arg);
 
 struct config_entry {
 	char* key;
@@ -194,6 +192,24 @@ static char* get_username(const Entry* pEntry, char* dn) {
 	return strtok_r(NULL, "=", &saveptr);
 }
 
+#if LDAP_VERSION_PRE_2_6
+static void set_additional_info(char** errmsg, const char* info, ...) {
+	va_list args;
+	va_start(args, info);
+	int needed = vsnprintf(NULL, 0, info, args);
+	va_end(args);
+
+	/* The allocated memory will be freed by ppolicy after use */
+	*errmsg = ber_memalloc(needed + 1);
+	if (!*errmsg) {
+		return;
+	}
+
+	va_start(args, info);
+	vsnprintf(*errmsg, needed + 1, info, args);
+	va_end(args);
+}
+#else
 static void set_additional_info(struct berval* errmsg, const char* info, ...) {
 	va_list args;
 	va_start(args, info);
@@ -212,10 +228,16 @@ static void set_additional_info(struct berval* errmsg, const char* info, ...) {
 	vsnprintf(errmsg->bv_val, needed + 1, info, args);
 	va_end(args);
 }
+#endif
 
+#if LDAP_VERSION_PRE_2_6
+int check_password(char* pPasswd, char** errmsg, Entry* pEntry,
+				   struct berval* pArg)
+#else
 int check_password(char* pPasswd, struct berval* errmsg, Entry* pEntry,
-				   struct berval* pArg) {
-
+				   struct berval* pArg)
+#endif
+{
 	const struct berval* pwdCheckModuleArg = pArg;
 
 	int nLen;

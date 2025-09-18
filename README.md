@@ -126,14 +126,15 @@ contains_username false
 
 ### Compilation Parameters (from Makefile)
 
-| Variable        | Default Value                       | Description                   |
-| --------------- | ----------------------------------- | ----------------------------- |
-| `CONFIG`        | `/etc/openldap/check_password.conf` | Path to config file           |
-| `LDAP_SRC_PATH` | `./openldap-src`                    | Path to OpenLDAP source tree  |
-| `HAVE_CRACKLIB` | `1`                                 | Enable CrackLib support       |
-| `CRACKLIB`      | `/usr/share/cracklib/pw_dict`       | Path to CrackLib dictionary   |
-| `CRACK_INC`     | (empty)                             | Path to CrackLib headers      |
-| `LOGGER_LEVEL`  | `LOGGER_LEVEL_WARNING`              | Logging verbosity (see below) |
+| Variable               | Default Value                       | Description                   |
+| ---------------------- | ----------------------------------- | ----------------------------- |
+| `CONFIG`               | `/etc/openldap/check_password.conf` | Path to config file           |
+| `LDAP_SRC_PATH`        | `./openldap-src`                    | Path to OpenLDAP source tree  |
+| `HAVE_CRACKLIB`        | `1`                                 | Enable CrackLib support       |
+| `CRACKLIB`             | `/usr/share/cracklib/pw_dict`       | Path to CrackLib dictionary   |
+| `CRACK_INC`            | (empty)                             | Path to CrackLib headers      |
+| `LOGGER_LEVEL`         | `LOGGER_LEVEL_WARNING`              | Logging verbosity (see below) |
+| `LDAP_VERSION_PRE_2_6` | `0`                                 | Compile for OpenLDAP < 2.6    |
 
 For example, to compile without Cracklib, with a custom config file path and OpenLDAP source tree location, run:
 

@@ -9,6 +9,9 @@ CONFIG=/etc/openldap/check_password.conf
 # Path to OpenLDAP source tree (defaults to source downloaded with 'make openldap').
 LDAP_SRC_PATH=openldap-src
 
+# If using the checker with OpenLDAP versions prior to 2.6, set this to 1.
+LDAP_VERSION_PRE_2_6=0
+
 # Define to 1 if you want to use CrackLib for password strength checking.
 HAVE_CRACKLIB=1
 
@@ -61,6 +64,10 @@ LDLIBS += -lcrack
 ifneq ($(CRACK_INC),)
 CPPFLAGS += -I$(CRACK_INC)
 endif
+endif
+
+ifeq ($(LDAP_VERSION_PRE_2_6),1)
+CPPFLAGS += -DLDAP_VERSION_PRE_2_6
 endif
 
 $(TARGET): $(OBJS)
