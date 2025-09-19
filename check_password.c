@@ -208,6 +208,8 @@ static void set_additional_info(char** errmsg, const char* info, ...) {
 	va_start(args, info);
 	vsnprintf(*errmsg, needed + 1, info, args);
 	va_end(args);
+
+	LOGGER_DEBUG("Set additional info: %s", *errmsg);
 }
 #else
 static void set_additional_info(struct berval* errmsg, const char* info, ...) {
@@ -227,6 +229,8 @@ static void set_additional_info(struct berval* errmsg, const char* info, ...) {
 	va_start(args, info);
 	vsnprintf(errmsg->bv_val, needed + 1, info, args);
 	va_end(args);
+
+	LOGGER_DEBUG("Set additional info: %s", errmsg->bv_val);
 }
 #endif
 
@@ -247,6 +251,8 @@ int check_password(char* pPasswd, struct berval* errmsg, Entry* pEntry,
 	int nPunct = 0;
 	int nQuality = 0;
 
+	LOGGER_DEBUG("check_password called");
+
 	/**
 	 * bail out early as cracklib will reject passwords shorter
 	 * than 6 characters
@@ -259,10 +265,11 @@ int check_password(char* pPasswd, struct berval* errmsg, Entry* pEntry,
 	}
 
 	if (read_config_file() == -1) {
-		LOGGER_ERROR("Could not read config file. Using defaults.");
+		LOGGER_WARNING("Could not read config file. Using defaults.");
 	}
 
 	if (pwdCheckModuleArg != NULL && pwdCheckModuleArg->bv_len > 0) {
+		LOGGER_DEBUG("Parsing config from module argument");
 		parse_config(pwdCheckModuleArg->bv_val);
 	}
 
@@ -418,8 +425,6 @@ int check_password(char* pPasswd, struct berval* errmsg, Entry* pEntry,
 		if (nErr == 0) {
 			r = (char*)FascistCheck(pPasswd, CRACKLIB_DICTPATH);
 			if (r != NULL) {
-				LOGGER_DEBUG("Cracklib rejected password '%s' because %s",
-							 pPasswd, r);
 				set_additional_info(errmsg, BAD_PASSWORD_SZ,
 									pEntry->e_name.bv_val, r);
 				goto fail;
