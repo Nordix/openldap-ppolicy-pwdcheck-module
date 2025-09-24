@@ -56,9 +56,12 @@ CPPFLAGS = \
 
 CPPFLAGS += -I$(LDAP_SRC_PATH)/include -I$(LDAP_SRC_PATH)/servers/slapd -I$(LDAP_SRC_PATH)/build-servers/include
 
-LDFLAGS=-shared -Wl,--no-undefined -L$(LDAP_SRC_PATH)/libraries/libldap/.libs -L$(LDAP_SRC_PATH)/libraries/liblber/.libs
+LDFLAGS=-shared -L$(LDAP_SRC_PATH)/libraries/libldap/.libs -L$(LDAP_SRC_PATH)/libraries/liblber/.libs
 
-LDLIBS=-lldap -llber
+### OpenLDAP libraries are not necessary in library load path but the functions are resolved at runtime to slapd process
+### If you want to enforce linking, uncomment the following lines.
+#LDFLAGS += -Wl,--no-undefined
+#LDLIBS=-lldap -llber
 
 ifeq ($(HAVE_CRACKLIB),1)
 CPPFLAGS += -DHAVE_CRACKLIB -DCRACKLIB_DICTPATH="\"$(CRACKLIB)\""
@@ -86,6 +89,7 @@ openldap:
 	(cd openldap-src && git fetch --tags && git checkout $(OPENLDAP_GIT_TAG) && ./configure --enable-modules --enable-ppolicy && make depend && make)
 
 test:
+	$(MAKE) clean
 	$(MAKE) CRACKLIB=$(CURDIR)/tests/cracklib-dictionary/dict LOGGER_LEVEL=LOGGER_LEVEL_DEBUG
 	tests/run.sh
 
