@@ -294,9 +294,9 @@ int check_password(char* pPasswd, struct berval* errmsg, Entry* pEntry,
 	 */
 
 	if (max_consecutive_per_class != 0) {
-		int consec_chars = 1;
-		char type[10] = "unkown";
-		char prev_type[10] = "unknown";
+		int consec_chars = 0;
+		char type[10] = "";
+		char prev_type[10] = "";
 		for (int i = 0; i < nLen; i++) {
 
 			if (islower(pPasswd[i])) {
@@ -311,21 +311,17 @@ int check_password(char* pPasswd, struct berval* errmsg, Entry* pEntry,
 				strncpy(type, "unknown", 10);
 			}
 
+			if (strncmp(type, prev_type, 10) == 0) {
+				consec_chars++;
+			} else {
+				consec_chars = 1;
+				strncpy(prev_type, type, 10);
+			}
+
 			if (consec_chars > max_consecutive_per_class) {
 				set_additional_info(errmsg, CONSEC_FAIL_SZ,
 									pEntry->e_name.bv_val);
 				goto fail;
-			}
-
-			if (strncmp(type, prev_type, 10) == 0) {
-				consec_chars++;
-			} else {
-				if (strncmp("unknown", prev_type, 8) != 0) {
-					consec_chars = 1;
-				} else {
-					consec_chars++;
-				}
-				strncpy(prev_type, type, 10);
 			}
 		}
 	}

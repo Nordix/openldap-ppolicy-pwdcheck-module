@@ -84,10 +84,8 @@ This check is independent of the quality points system: both must be satisfied u
 ##### Maximum Consecutive Characters (`max_consecutive_per_class`)
 
 This parameter sets the limit for consecutive characters from the same character class in a password.
-For example, if `max_consecutive_per_class` set to 5, a password may include up to 4 consecutive lowercase letters.
+For example, if `max_consecutive_per_class` set to 4, a password may include up to 4 consecutive lowercase letters.
 `abcdABCD1234` is valid, but `abcdeABCDE12345` exceeds the limit and is rejected.
-
-⚠️ Due to a bug, consecutive characters are counted incorrectly, so the effective limit is one less than the configured value. This behavior is preserved for compatibility with the original module.
 
 Setting the value to 0 disables this check.
 
