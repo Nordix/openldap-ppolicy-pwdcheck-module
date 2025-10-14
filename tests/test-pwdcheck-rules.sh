@@ -110,15 +110,16 @@ attempt_password_change "abcd!fgh/j"
 expect_no_message
 echo "[PASS] min_punct"
 
-# NOTE: max_consecutive_per_class counts wrong in current implementation, so we need to set 3 to allow 2 consecutive chars.
 echo "[TEST] max_consecutive_per_class..."
 set_pwd_check_module_arg <<EOF
 min_points 1
-max_consecutive_per_class 5
+max_consecutive_per_class 4
 use_cracklib 0
 EOF
 reset_password
 attempt_password_change "abcdeABCDE12345"
+expect_error_message "Too many consecutive characters in the same character class"
+attempt_password_change "abcdABCED1234!#$%&"
 expect_error_message "Too many consecutive characters in the same character class"
 attempt_password_change "abcdABCD1234"
 expect_no_message
